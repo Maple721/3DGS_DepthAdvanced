@@ -71,11 +71,6 @@ def getNerfppNorm(cam_info):
 def readColmapCameras(cam_extrinsics, cam_intrinsics, depths_params, images_folder, depths_folder, test_cam_names_list):
     cam_infos = []
     for idx, key in enumerate(cam_extrinsics):
-        sys.stdout.write('\r')
-        # the exact output you're looking for:
-        sys.stdout.write("Reading camera {}/{}".format(idx+1, len(cam_extrinsics)))
-        sys.stdout.flush()
-
         extr = cam_extrinsics[key]
         intr = cam_intrinsics[extr.camera_id]
         height = intr.height
@@ -114,7 +109,6 @@ def readColmapCameras(cam_extrinsics, cam_intrinsics, depths_params, images_fold
                               width=width, height=height, is_test=image_name in test_cam_names_list)
         cam_infos.append(cam_info)
 
-    sys.stdout.write('\n')
     return cam_infos
 
 def fetchPly(path):
@@ -191,10 +185,38 @@ def readColmapSceneInfo(path, images, depths, eval, train_test_exp, llffhold=8):
         test_cam_names_list = []
 
     reading_dir = "images" if images == None else images
+    # Handle depths path - check if it needs to be joined with source path
+    if depths != "":
+        # If depths contains path separators and doesn't start with ./ or ../,
+        # it might be a relative path that needs to be joined
+        if os.path.isabs(depths):
+            # Absolute path - use as is
+            depths_folder = depths
+        elif depths.startswith("./") or depths.startswith("../"):
+            # Relative path starting with ./ or ../ - use as is
+            depths_folder = depths
+        else:
+            # Check if depths exists as-is (relative to current directory)
+            # or if path/depths exists (relative to source path)
+            if os.path.exists(depths):
+                # Check if it's the same as path/depths
+                full_depths_path = os.path.join(path, depths)
+                if os.path.exists(full_depths_path):
+                    # Both exist, prefer the one relative to path
+                    depths_folder = full_depths_path
+                else:
+                    # Only depths exists, use it as-is
+                    depths_folder = depths
+            else:
+                # Only path/depths exists
+                depths_folder = os.path.join(path, depths)
+    else:
+        depths_folder = ""
+
     cam_infos_unsorted = readColmapCameras(
         cam_extrinsics=cam_extrinsics, cam_intrinsics=cam_intrinsics, depths_params=depths_params,
-        images_folder=os.path.join(path, reading_dir), 
-        depths_folder=os.path.join(path, depths) if depths != "" else "", test_cam_names_list=test_cam_names_list)
+        images_folder=os.path.join(path, reading_dir),
+        depths_folder=depths_folder, test_cam_names_list=test_cam_names_list)
     cam_infos = sorted(cam_infos_unsorted.copy(), key = lambda x : x.image_name)
 
     train_cam_infos = [c for c in cam_infos if train_test_exp or not c.is_test]

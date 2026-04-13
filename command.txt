@@ -1,0 +1,66 @@
+conda activate gs_depth && cd .. && cd project/gaussian-splatting
+python utils/make_depth_scale.py \
+    --base_dir /home/wxy/3DGS/CL-GS/data/PINHOLE/20260325_PurificationWorkstation_2_sam \
+    --depths_dir /home/wxy/3DGS/CL-GS/data/PINHOLE/20260325_PurificationWorkstation_2_sam/depth \
+    --model_type bin && \
+CUDA_VISIBLE_DEVICES=1 conda run -n gs_depth python train.py \
+-s /home/wxy/3DGS/CL-GS/data/PINHOLE/20260325_PurificationWorkstation_2_sam \
+-d /home/wxy/3DGS/CL-GS/data/PINHOLE/20260325_PurificationWorkstation_2_sam/depth \
+--exposure_lr_init 0.001 --exposure_lr_final 0.0001 \
+--exposure_lr_delay_steps 5000 \
+--exposure_lr_delay_mult 0.001 \
+--train_test_exp
+
+model = "20260325_PurificationWorkstation_1_sam"
+CUDA_VISIBLE_DEVICES=2 conda run -n gs_depth python train.py \
+-s /home/wxy/3DGS/CL-GS/data/PINHOLE/20260325_PurificationWorkstation_1_sam \
+-d /home/wxy/3DGS/CL-GS/data/PINHOLE/20260325_PurificationWorkstation_1_sam/depth \
+--exposure_lr_init 0.001 --exposure_lr_final 0.0001 \
+--exposure_lr_delay_steps 5000 \
+--exposure_lr_delay_mult 0.001 \
+--train_test_exp
+
+CUDA_VISIBLE_DEVICES=3 conda run -n gs_depth python train.py \
+-s /home/wxy/3DGS/CL-GS/data/PINHOLE/20260310_LiquidInjection2_sam \
+-d /home/wxy/3DGS/CL-GS/data/PINHOLE/20260310_LiquidInjection2_sam/depth \
+--exposure_lr_init 0.001 --exposure_lr_final 0.0001 \
+--exposure_lr_delay_steps 5000 \
+--exposure_lr_delay_mult 0.001 \
+--train_test_exp
+
+CUDA_VISIBLE_DEVICES=4 conda run -n gs_depth python train.py \
+-s /home/wxy/3DGS/CL-GS/data/PINHOLE/20260310_LiquidInjection1_sam \
+-d /home/wxy/3DGS/CL-GS/data/PINHOLE/20260310_LiquidInjection1_sam/depth \
+--exposure_lr_init 0.001 --exposure_lr_final 0.0001 \
+--exposure_lr_delay_steps 5000 \
+--exposure_lr_delay_mult 0.001 \
+--train_test_exp
+
+CUDA_VISIBLE_DEVICES=5 conda run -n gs_depth python train.py \
+-s /home/wxy/3DGS/CL-GS/data/PINHOLE/20260318_MettlerAutomaticSamplingBalance_sam \
+-d /home/wxy/3DGS/CL-GS/data/PINHOLE/20260318_MettlerAutomaticSamplingBalance_sam/depth \
+--exposure_lr_init 0.001 --exposure_lr_final 0.0001 \
+--exposure_lr_delay_steps 5000 \
+--exposure_lr_delay_mult 0.001 \
+--train_test_exp
+
+CUDA_VISIBLE_DEVICES=6 conda run -n gs_depth python train.py \
+-s /home/wxy/3DGS/CL-GS/data/PINHOLE/20260314_ElectrochemicalTestBench_sam \
+-d /home/wxy/3DGS/CL-GS/data/PINHOLE/20260314_ElectrochemicalTestBench_sam/depth \
+--exposure_lr_init 0.001 --exposure_lr_final 0.0001 \
+--exposure_lr_delay_steps 5000 \
+--exposure_lr_delay_mult 0.001 \
+--train_test_exp
+
+
+
+
+
+
+
+CUDA_VISIBLE_DEVICES=1 python render_custom_pose.py \
+    -m /home/wxy/project/gaussian-splatting/output/ee0d3183-0 \
+    --source_path /home/wxy/project/gaussian-splatting/data/20260314_ElectrochemicalTestBench \
+    --pose_file poses.json \
+    --output_dir ./test_output \
+    --iteration 30000 2>&1

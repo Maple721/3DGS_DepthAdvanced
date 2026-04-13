@@ -18,6 +18,8 @@ import cv2
 WARNED = False
 
 def loadCam(args, id, cam_info, resolution_scale, is_nerf_synthetic, is_test_dataset):
+    # DEBUG_DEPTH_PATH - commented out for cleaner output
+    # print(f'[DEBUG] loadCam id={id}, depth_path={repr(cam_info.depth_path)}')
     image = Image.open(cam_info.image_path)
 
     if cam_info.depth_path != "":

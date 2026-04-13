@@ -17,7 +17,6 @@ from gaussian_renderer import render, network_gui
 import sys
 from scene import Scene, GaussianModel
 from utils.general_utils import safe_state, get_expon_lr_func
-import uuid
 from tqdm import tqdm
 from utils.image_utils import psnr
 from argparse import ArgumentParser, Namespace
@@ -189,13 +188,22 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
                 print("\n[ITER {}] Saving Checkpoint".format(iteration))
                 torch.save((gaussians.capture(), iteration), scene.model_path + "/chkpnt" + str(iteration) + ".pth")
 
-def prepare_output_and_logger(args):    
+def prepare_output_and_logger(args):
     if not args.model_path:
+        # Use source path basename as model name
         if os.getenv('OAR_JOB_ID'):
             unique_str=os.getenv('OAR_JOB_ID')
         else:
-            unique_str = str(uuid.uuid4())
-        args.model_path = os.path.join("./output/", unique_str[0:10])
+            # Use source path basename as model name
+            source_basename = os.path.basename(args.source_path.rstrip('/'))
+            # Clean up the name (remove special characters)
+            clean_name = ''.join(c if c.isalnum() or c in ('-', '_') else '_' for c in source_basename)
+            clean_name = clean_name.rstrip('_')
+            if not clean_name:
+                clean_name = "unnamed"
+            unique_str = clean_name
+
+        args.model_path = os.path.join("./output/", unique_str)
         
     # Set up output folder
     print("Output folder: {}".format(args.model_path))
@@ -276,8 +284,7 @@ if __name__ == "__main__":
     safe_state(args.quiet)
 
     # Start GUI server, configure and run training
-    if not args.disable_viewer:
-        network_gui.init(args.ip, args.port)
+    # network_gui.init(args.ip, args.port)  # Disabled
     torch.autograd.set_detect_anomaly(args.detect_anomaly)
     training(lp.extract(args), op.extract(args), pp.extract(args), args.test_iterations, args.save_iterations, args.checkpoint_iterations, args.start_checkpoint, args.debug_from)
 
