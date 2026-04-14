@@ -25,6 +25,7 @@ from argparse import ArgumentParser
 from arguments import ModelParams, PipelineParams, get_combined_args
 from scene.cameras import Camera
 import sys
+import cv2
 
 
 def load_poses_from_json(pose_file):
@@ -121,17 +122,25 @@ def render_set(model_path, output_dir, views, gaussians, pipeline, background, t
         torchvision.utils.save_image(rendering, rgb_path)
         print(f"  Saved: {rgb_path}")
 
-        # Save depth map (normalize to 0-1 for visualization)
+        # Create mask from RGB: black regions = 0, non-black regions = 1
+        rgb_np = (rendering.permute(1, 2, 0).cpu().numpy() * 255).astype(np.uint8)
+        mask = (rgb_np > 10).any(axis=2).astype(np.float32)
+        mask_tensor = torch.from_numpy(mask).to(depth.device)
+
+        # Save depth map (normalize to 0-1 for visualization, then apply mask)
         depth_path = os.path.join(output_dir, "depth", f"{view.image_name}_depth.png")
         depth_min = depth.min()
         depth_max = depth.max()
         depth_normalized = (depth - depth_min) / (depth_max - depth_min + 1e-8)
-        torchvision.utils.save_image(depth_normalized, depth_path)
+        # Apply mask: set black regions in RGB to 0 in depth
+        depth_masked = depth_normalized * mask_tensor
+        torchvision.utils.save_image(depth_masked, depth_path)
         print(f"  Saved: {depth_path}")
 
-        # Also save raw depth as .npy for precise values
+        # Also save raw depth as .npy for precise values (apply mask to keep black regions as 0)
         npy_depth_path = os.path.join(output_dir, "depth", f"{view.image_name}_depth.npy")
-        np.save(npy_depth_path, depth.cpu().numpy())
+        depth_raw_masked = depth * mask_tensor
+        np.save(npy_depth_path, depth_raw_masked.cpu().numpy())
         print(f"  Saved: {npy_depth_path}")
 
 
