@@ -52,8 +52,44 @@ CUDA_VISIBLE_DEVICES=6 conda run -n gs_depth python train.py \
 --exposure_lr_delay_mult 0.001 \
 --train_test_exp
 
+conda activate gs_depth && cd .. && cd project/3DGS_DepthAdvanced
+python utils/make_depth_scale.py \
+    --base_dir /home/wxy/3DGS/CL-GS/data/PINHOLE/Dryer \
+    --depths_dir /home/wxy/3DGS/CL-GS/data/PINHOLE/Dryer/depth \
+    --model_type bin && \
+CUDA_VISIBLE_DEVICES=0 conda run -n gs_depth python train.py \
+-s /home/wxy/3DGS/CL-GS/data/PINHOLE/Dryer \
+-d /home/wxy/3DGS/CL-GS/data/PINHOLE/Dryer/depth \
+--exposure_lr_init 0.001 --exposure_lr_final 0.0001 \
+--exposure_lr_delay_steps 5000 \
+--exposure_lr_delay_mult 0.001 \
+--train_test_exp
 
+conda activate gs_depth && cd .. && cd wxy/project/3DGS_DepthAdvanced
+python utils/make_depth_scale.py \
+    --base_dir /home/wxy/3DGS/CL-GS/data/PINHOLE/HeatingMagneticStirrer \
+    --depths_dir /home/wxy/3DGS/CL-GS/data/PINHOLE/HeatingMagneticStirrer/depth \
+    --model_type bin && \
+CUDA_VISIBLE_DEVICES=1 conda run -n gs_depth python train.py \
+-s /home/wxy/3DGS/CL-GS/data/PINHOLE/HeatingMagneticStirrer \
+-d /home/wxy/3DGS/CL-GS/data/PINHOLE/HeatingMagneticStirrer/depth \
+--exposure_lr_init 0.001 --exposure_lr_final 0.0001 \
+--exposure_lr_delay_steps 5000 \
+--exposure_lr_delay_mult 0.001 \
+--train_test_exp
 
+conda activate gs_depth && cd .. && cd wxy/project/3DGS_DepthAdvanced
+python utils/make_depth_scale.py \
+    --base_dir /home/wxy/3DGS/CL-GS/data/PINHOLE/UltrasonicClean \
+    --depths_dir /home/wxy/3DGS/CL-GS/data/PINHOLE/UltrasonicClean/depth \
+    --model_type bin && \
+CUDA_VISIBLE_DEVICES=3 conda run -n gs_depth python train.py \
+-s /home/wxy/3DGS/CL-GS/data/PINHOLE/UltrasonicClean \
+-d /home/wxy/3DGS/CL-GS/data/PINHOLE/UltrasonicClean/depth \
+--exposure_lr_init 0.001 --exposure_lr_final 0.0001 \
+--exposure_lr_delay_steps 5000 \
+--exposure_lr_delay_mult 0.001 \
+--train_test_exp
 
 
 
@@ -64,3 +100,7 @@ CUDA_VISIBLE_DEVICES=1 python render_custom_pose.py \
     --pose_file poses.json \
     --output_dir ./test_output \
     --iteration 30000 2>&1
+
+./render.sh --model_path Dryer --pose_file poses.json && \
+./render.sh --model_path UltrasonicClean --pose_file poses.json && \
+./render.sh --model_path HeatingMagneticStirrer --pose_file poses.json
